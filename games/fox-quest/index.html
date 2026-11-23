@@ -29,20 +29,20 @@
 <body>
   <canvas id="canvas"></canvas>
   <div id="status">
-    <img id="status-splash" src="/engine/4.5.1/index.png" alt="">
+    <img id="status-splash" src="../../engine/4.5.1/index.png" alt="">
     <progress id="status-progress"></progress>
     <div id="status-notice"></div>
   </div>
-  <div id="hint"><a href="/">← 游戏列表</a></div>
+  <div id="hint"><a href="../../">← 游戏列表</a></div>
 
-  <script src="/engine/4.5.1/index.js"></script>
+  <script src="../../engine/4.5.1/index.js"></script>
   <script>
     // 引擎 wasm 在 GitHub 上被切成 7 片，由根目录 sw.js 拼回一条流，
     // 所以必须先等 Service Worker 接管页面再启动。
     (async function () {
       if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
         try {
-          await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+          await navigator.serviceWorker.register('../../sw.js', { scope: '../../' });
           await navigator.serviceWorker.ready;
           if (!sessionStorage.getItem('sw-reloaded')) {
             sessionStorage.setItem('sw-reloaded', '1');
@@ -54,21 +54,23 @@
         }
       }
 
+      // 站点挂在 /games/ 下：仓库名 games，所以所有绝对路径都要带这个前缀
+      const BASE = location.pathname.slice(0, location.pathname.indexOf('/games/')) + '/games';
       const GODOT_CONFIG = {
         "args": [],
         "canvasResizePolicy": 2,
         "emscriptenPoolSize": 8,
         "ensureCrossOriginIsolationHeaders": true,
-        "executable": "/engine/4.5.1/index",
+        "executable": BASE + "/engine/4.5.1/index",
         "experimentalVK": false,
         "fileSizes": {
-          "/engine/4.5.1/index.wasm": 38034280,
-          "/games/fox-quest/game.pck": 3352316
+          BASE + "/engine/4.5.1/index.wasm": 38034280,
+          BASE + "/games/fox-quest/game.pck": 3352316
         },
         "focusCanvas": true,
         "gdextensionLibs": [],
         "godotPoolSize": 4,
-        "mainPack": "/games/fox-quest/game.pck"
+        "mainPack": BASE + "/games/fox-quest/game.pck"
       };
       const engine = new Engine(GODOT_CONFIG);
 
