@@ -2,6 +2,7 @@
 // 37 个分片**同时开始下载**，再按顺序拼给引擎——这样在高延迟线路上也能跑满带宽。
 const CHUNKS = 37;
 const WASM_TAIL = '/engine/4.5.1/index.wasm';
+const TOTAL_BYTES = 38034280;
 
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
@@ -49,7 +50,20 @@ function streamWasm() {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.endsWith(WASM_TAIL)) {
-    event.respondWith(streamWasm());
+  if (!url.pathname.endsWith(WASM_TAIL)) return;
+
+  // Godot 的加载器会先发 HEAD 探长度，再发 GET（可能带 Range）。
+  // HEAD 必须回一个不带 body 的 200，否则请求会被浏览器中止（ERR_ABORTED）。
+  if (event.request.method !== 'GET') {
+    event.respondWith(new Response(null, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/wasm',
+        'Content-Length': String(TOTAL_BYTES),
+        'Accept-Ranges': 'bytes'
+      }
+    }));
+    return;
   }
+  event.respondWith(streamWasm());
 });
