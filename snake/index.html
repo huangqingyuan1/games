@@ -29,13 +29,13 @@
 <body>
   <canvas id="canvas"></canvas>
   <div id="status">
-    <img id="status-splash" src="../engine/4.5.1/index.png" alt="">
+    <img id="status-splash" src="../../engine/4.5.1/index.png" alt="">
     <progress id="status-progress"></progress>
     <div id="status-notice"></div>
   </div>
-  <div id="hint"><a href="../../">← 游戏列表</a></div>
+  <div id="hint"><a href="https://my-blog-5qs.pages.dev/game/" target="_self" onclick="try{window.close()}catch(e){}">← 回博客游戏大厅</a></div>
 
-  <script src="../engine/4.5.1/index.js"></script>
+  <script src="../../engine/4.5.1/index.js"></script>
   <script>
     (async function () {
       // 引擎 wasm 在 GitHub 上被切成 37 片，由本目录的 sw.js 拼回一条流，
@@ -54,8 +54,8 @@
         }
       }
 
-      const exeUrl = new URL('../engine/4.5.1/index', location.href).href;
-      const wasmUrl = new URL('../engine/4.5.1/index.wasm', location.href).href;
+      const exeUrl = new URL('../../engine/4.5.1/index', location.href).href;
+      const wasmUrl = new URL('../../engine/4.5.1/index.wasm', location.href).href;
       const pckUrl = new URL('game.pck', location.href).href;
 
       const GODOT_CONFIG = {
