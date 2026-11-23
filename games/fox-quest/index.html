@@ -37,12 +37,12 @@
 
   <script src="../../engine/4.5.1/index.js"></script>
   <script>
-    // 引擎 wasm 在 GitHub 上被切成 7 片，由根目录 sw.js 拼回一条流，
-    // 所以必须先等 Service Worker 接管页面再启动。
     (async function () {
+      // 引擎 wasm 在 GitHub 上被切成 37 片，由本目录的 sw.js 拼回一条流，
+      // 所以必须等 Service Worker 接管本页之后再启动引擎。
       if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
         try {
-          await navigator.serviceWorker.register('../../sw.js', { scope: '../../' });
+          await navigator.serviceWorker.register('sw.js');
           await navigator.serviceWorker.ready;
           if (!sessionStorage.getItem('sw-reloaded')) {
             sessionStorage.setItem('sw-reloaded', '1');
@@ -50,28 +50,30 @@
             return;
           }
         } catch (err) {
-          console.warn('service worker 注册失败，引擎可能加载不出来：', err);
+          console.warn('service worker 注册失败：', err);
         }
       }
 
-      // 站点挂在 /games/ 下：仓库名 games，所以所有绝对路径都要带这个前缀
-      const BASE = location.pathname.slice(0, location.pathname.indexOf('/games/')) + '/games';
+      const exeUrl = new URL('../../engine/4.5.1/index', location.href).href;
+      const wasmUrl = new URL('../../engine/4.5.1/index.wasm', location.href).href;
+      const pckUrl = new URL('game.pck', location.href).href;
+
       const GODOT_CONFIG = {
         "args": [],
         "canvasResizePolicy": 2,
         "emscriptenPoolSize": 8,
         "ensureCrossOriginIsolationHeaders": true,
-        "executable": BASE + "/engine/4.5.1/index",
+        "executable": exeUrl,
         "experimentalVK": false,
-        "fileSizes": {
-          BASE + "/engine/4.5.1/index.wasm": 38034280,
-          BASE + "/games/fox-quest/game.pck": 3352316
-        },
+        "fileSizes": {},
         "focusCanvas": true,
         "gdextensionLibs": [],
         "godotPoolSize": 4,
-        "mainPack": BASE + "/games/fox-quest/game.pck"
+        "mainPack": pckUrl
       };
+      GODOT_CONFIG.fileSizes[wasmUrl] = 38034280;
+      GODOT_CONFIG.fileSizes[pckUrl] = 3352316;
+
       const engine = new Engine(GODOT_CONFIG);
 
       const statusOverlay = document.getElementById('status');
