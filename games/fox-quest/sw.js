@@ -7,22 +7,25 @@ const TOTAL_BYTES = 38034280;
 self.addEventListener('install', (e) => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
-let started = null;
+const base = new URL('../../engine/4.5.1/', self.location.href).href;
 
-function startAll() {
-  if (started) return started;
-  const base = new URL('../../engine/4.5.1/', self.location.href).href;
-  started = Array.from({ length: CHUNKS }, (_, i) =>
-    fetch(`${base}index.wasm.${i}`, { cache: 'force-cache' }).then((res) => {
-      if (!res.ok) throw new Error('chunk ' + i + ' HTTP ' + res.status);
-      return res;
-    })
-  );
-  return started;
+// 一次只抓一片（并发太高时 CDN / 代理会直接掐断连接），每片最多重试 4 次。
+async function fetchChunk(i) {
+  let lastErr = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const res = await fetch(`${base}index.wasm.${i}`, { cache: 'force-cache' });
+      if (res.ok) return res;
+      lastErr = new Error('chunk ' + i + ' HTTP ' + res.status);
+    } catch (err) {
+      lastErr = err;
+    }
+    await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+  }
+  throw lastErr || new Error('chunk ' + i + ' failed');
 }
 
 function streamWasm() {
-  const parts = startAll();
   let i = 0;
   const body = new ReadableStream({
     async pull(controller) {
@@ -30,7 +33,7 @@ function streamWasm() {
         controller.close();
         return;
       }
-      const res = await parts[i++];
+      const res = await fetchChunk(i++);
       const reader = res.body.getReader();
       while (true) {
         const { done, value } = await reader.read();
