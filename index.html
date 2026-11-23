@@ -17,7 +17,8 @@
            background: #171b26; border: 1px solid #232a3a; color: inherit; transition: .2s; }
   a.card:hover { transform: translateY(-3px); border-color: #4a5bff; box-shadow: 0 12px 30px rgba(74,91,255,.18); }
   .cover { aspect-ratio: 16/9; background: linear-gradient(135deg,#2b3a6b,#5b3a8a); display: flex;
-           align-items: center; justify-content: center; font-size: 42px; }
+           align-items: center; justify-content: center; font-size: 42px; overflow: hidden; }
+  .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .body { padding: 12px 14px 16px; }
   .body h2 { font-size: 16px; margin: 0 0 6px; }
   .body span { font-size: 12.5px; color: #7c879c; }
@@ -29,8 +30,12 @@
   <p class="sub">全部由 Godot 4.5.1 制作，共用同一份引擎，只加载各自的游戏数据。</p>
   <div class="grid">
     <a class="card" href="games/fox-quest/">
-      <div class="cover">🦊</div>
+      <div class="cover"><img src="covers/fox-quest.jpg" alt="狐狸闯关"></div>
       <div class="body"><h2>狐狸闯关 Fox Quest</h2><span>10 关 · 双 BOSS · 横版射击</span></div>
+    </a>
+    <a class="card" href="games/snake/">
+      <div class="cover"><img src="covers/snake.jpg" alt="贪吃蛇"></div>
+      <div class="body"><h2>贪吃蛇 Snake</h2><span>32×32 地图 · 穿墙 · 手机可玩</span></div>
     </a>
   </div>
 </main>

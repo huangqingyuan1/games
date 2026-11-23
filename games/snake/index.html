@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<title>贪吃蛇 Snake</title>
+<style>
+  html, body, #canvas { margin: 0; padding: 0; border: 0; }
+  body { color: #fff; background: #12141c; overflow: hidden; touch-action: none;
+         font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; }
+  #canvas { display: block; }
+  #canvas:focus { outline: none; }
+  #status { position: absolute; inset: 0; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 14px;
+            background: #12141c; visibility: hidden; z-index: 10; }
+  #status-splash { max-height: 60vh; max-width: 60vw; opacity: .9; }
+  #status-progress { width: 240px; height: 4px; border: 0; border-radius: 2px;
+                     background: #232838; color: #7c8cff; -webkit-appearance: none; }
+  #status-progress::-webkit-progress-bar { background: #232838; border-radius: 2px; }
+  #status-progress::-webkit-progress-value { background: #7c8cff; border-radius: 2px; }
+  #status-notice { max-width: 70ch; font-size: 13px; color: #ff9a9a; text-align: center;
+                   white-space: pre-wrap; display: none; }
+  #hint { position: absolute; left: 12px; top: 10px; font-size: 12px;
+          color: #7c879c; z-index: 5; opacity: .75; }
+  #hint a { color: #8b96ff; text-decoration: none; }
+  #hint:hover { opacity: 1; }
+</style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <div id="status">
+    <img id="status-splash" src="../../engine/4.5.1/index.png" alt="">
+    <progress id="status-progress"></progress>
+    <div id="status-notice"></div>
+  </div>
+  <div id="hint"><a href="../../">← 游戏列表</a></div>
+
+  <script src="../../engine/4.5.1/index.js"></script>
+  <script>
+    (async function () {
+      // 引擎 wasm 在 GitHub 上被切成 37 片，由本目录的 sw.js 拼回一条流，
+      // 所以必须等 Service Worker 接管本页之后再启动引擎。
+      if ('serviceWorker' in navigator && !navigator.serviceWorker.controller) {
+        try {
+          await navigator.serviceWorker.register('sw.js');
+          await navigator.serviceWorker.ready;
+          if (!sessionStorage.getItem('sw-reloaded')) {
+            sessionStorage.setItem('sw-reloaded', '1');
+            location.reload();
+            return;
+          }
+        } catch (err) {
+          console.warn('service worker 注册失败：', err);
+        }
+      }
+
+      const exeUrl = new URL('../../engine/4.5.1/index', location.href).href;
+      const wasmUrl = new URL('../../engine/4.5.1/index.wasm', location.href).href;
+      const pckUrl = new URL('game.pck', location.href).href;
+
+      const GODOT_CONFIG = {
+        "args": [],
+        "canvasResizePolicy": 2,
+        "emscriptenPoolSize": 8,
+        "ensureCrossOriginIsolationHeaders": true,
+        "executable": exeUrl,
+        "experimentalVK": false,
+        "fileSizes": {},
+        "focusCanvas": true,
+        "gdextensionLibs": [],
+        "godotPoolSize": 4,
+        "mainPack": pckUrl
+      };
+      GODOT_CONFIG.fileSizes[wasmUrl] = 38034280;
+      GODOT_CONFIG.fileSizes[pckUrl] = 5652128;
+
+      const engine = new Engine(GODOT_CONFIG);
+
+      const statusOverlay = document.getElementById('status');
+      const statusProgress = document.getElementById('status-progress');
+      const statusNotice = document.getElementById('status-notice');
+      let hidden = true;
+      const showStatus = () => { statusOverlay.style.visibility = 'visible'; hidden = false; };
+      const hideStatus = () => { statusOverlay.style.visibility = 'hidden'; hidden = true; };
+      const fail = (msg) => {
+        showStatus();
+        statusNotice.style.display = 'block';
+        statusNotice.textContent = msg;
+        statusProgress.style.display = 'none';
+        console.error(msg);
+      };
+
+      showStatus();
+      engine.startGame({
+        onProgress: (current, total) => {
+          if (!statusProgress) return;
+          if (current > 0 && total > 0) {
+            statusProgress.value = current;
+            statusProgress.max = total;
+          } else {
+            statusProgress.removeAttribute('value');
+            statusProgress.removeAttribute('max');
+          }
+        }
+      }).then(hideStatus, (err) => fail(String(err)));
+
+      window.addEventListener('error', (e) => { if (hidden) fail(e.message); });
+    }());
+  </script>
+</body>
+</html>
