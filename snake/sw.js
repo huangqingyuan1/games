@@ -5,7 +5,7 @@ const PCK_BYTES = 5652128;
 const MU = '/engine/4.5.1/index.wasm';
 const CDN = 'https://cdn.jsdelivr.net/gh/huangqingyuan1/games@main/';
 const Q = '?v=20261124a';
-const GH = new URL('../', self.location.href).href;
+const GH = new URL('../../', self.location.href).href;
 const CACHE_NAME = 'godot-br-v1';
 
 self.addEventListener('install', (e) => e.waitUntil(self.skipWaiting()));
@@ -69,7 +69,7 @@ self.addEventListener('fetch', (event) => {
   }
   if (url.pathname.endsWith('/game.pck')) {
     event.respondWith((async () => {
-      const buf = await cached('games/snake/game.pck', false);
+      const buf = await cached('snake/game.pck', false);
       return new Response(buf, { headers: {
         'Content-Type': 'application/octet-stream',
         'Content-Length': String(PCK_BYTES),
